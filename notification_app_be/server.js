@@ -13,9 +13,10 @@ const EXTERNAL_API = 'http://4.224.186.213/evaluation-service/notifications';
 async function getAuthHeader() {
     try {
         const token = await logger.getAuthToken();
-        return token ? { 'Authorization': `Bearer ${token}` } : {};
+        if (!token) return {};
+        return { 'Authorization': `Bearer ${token}` };
     } catch (error) {
-        logger.error('auth', 'Failed to acquire authorization token');
+        logger.error('auth', 'failed to acquire authorization token');
         return {};
     }
 }
@@ -28,8 +29,6 @@ const TYPE_WEIGHTS = {
 
 function calculateScore(type, timestampStr) {
     const weight = TYPE_WEIGHTS[type] || 0;
-    
-    // Robust date parsing sanity fallback check
     let recency = Date.now();
     if (timestampStr) {
         const safeTimestamp = timestampStr.replace(' ', 'T');
@@ -38,7 +37,6 @@ function calculateScore(type, timestampStr) {
             recency = parsedTime;
         }
     }
-    
     return (weight * 10000000000000) + recency;
 }
 
@@ -50,21 +48,29 @@ function getTopNotifications(notifications, limit = 10) {
 }
 
 app.get('/api/all-notifications', async (req, res) => {
-    logger.info('route', 'Received request for all raw notifications');
+    logger.info('route', 'received request for all raw notifications');
     try {
-        const { limit, notification_type } = req.query;
+        const { notification_type } = req.query;
         let targetUrl = EXTERNAL_API;
         const urlParams = [];
         
-        if (limit) urlParams.push(`limit=${limit}`);
-        if (notification_type) urlParams.push(`notification_type=${notification_type}`);
+        urlParams.push('limit=10');
+        
+        if (notification_type && notification_type !== 'All') {
+            urlParams.push(`notification_type=${notification_type}`);
+        }
+        
         if (urlParams.length > 0) targetUrl += `?${urlParams.join('&')}`;
 
         const headers = await getAuthHeader();
         const response = await axios.get(targetUrl, { headers });
-        const rawNotifications = response.data.notifications || [];
         
-        logger.info('service', `Successfully fetched raw notifications count: ${rawNotifications.length}`);
+        let rawNotifications = [];
+        if (response.data) {
+            rawNotifications = response.data.notifications || response.data.data || (Array.isArray(response.data) ? response.data : []);
+        }
+        
+        logger.info('service', 'successfully fetched raw notifications data');
         res.status(200).json({ success: true, data: rawNotifications });
     } catch (error) {
         logger.error('handler', 'failed fetching raw data stream from remote server');
@@ -73,24 +79,28 @@ app.get('/api/all-notifications', async (req, res) => {
 });
 
 app.get('/api/priority-notifications', async (req, res) => {
-    logger.info('route', 'Received request for prioritized notification stream');
+    logger.info('route', 'received request for prioritized notification stream');
     try {
-        // Fetch a high count from the source to avoid losing items during UI filtering loops
-        const limit = parseInt(req.query.limit) || 50; 
+        const limit = parseInt(req.query.limit) || 10; 
         const headers = await getAuthHeader();
-        const response = await axios.get(EXTERNAL_API, { headers });
-        const rawNotifications = response.data.notifications || [];
+        
+        const response = await axios.get(`${EXTERNAL_API}?limit=10`, { headers });
+        
+        let rawNotifications = [];
+        if (response.data) {
+            rawNotifications = response.data.notifications || response.data.data || (Array.isArray(response.data) ? response.data : []);
+        }
 
         const priorityData = getTopNotifications(rawNotifications, limit);
         
-        logger.info('service', `Successfully parsed priority records count: ${priorityData.length}`);
+        logger.info('service', 'successfully parsed priority records dataset');
         res.status(200).json({ success: true, data: priorityData });
     } catch (error) {
         logger.error('handler', 'failed fetching priority stream metrics data');
-        res.status(500).json({ success: false, error: 'Internal gateway error context.' });
+        res.status(500).json({ success: false, error: 'Int gateway error context.' });
     }
 });
 
 app.listen(PORT, () => {
-    logger.info('config', `Backend engine servicing on port ${PORT}`);
+    logger.info('config', `backend engine servicing on port ${PORT}`);
 });

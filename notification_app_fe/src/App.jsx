@@ -32,11 +32,11 @@ export default function App() {
     try {
       if (currentTab === 0) {
         const typeParam = filterType !== 'All' ? `&notification_type=${filterType}` : '';
-        const res = await axios.get(`http://localhost:5000/api/all-notifications?limit=50${typeParam}`);
+        // FIX: Request 10 items instead of 50
+        const res = await axios.get(`http://localhost:5000/api/all-notifications?limit=10${typeParam}`);
         setNotifications(res.data.data || []);
       } else {
-        // Request a full batch to ensure filters don't shrink the list view incorrectly
-        const res = await axios.get(`http://localhost:5000/api/priority-notifications?limit=100`);
+        const res = await axios.get(`http://localhost:5000/api/priority-notifications?limit=${priorityLimit}`);
         setNotifications(res.data.data || []);
       }
     } catch (err) {
@@ -58,10 +58,7 @@ export default function App() {
     return <EventIcon color="warning" />;
   };
 
-  // Run filtering first
   const filteredNotifications = notifications.filter(n => filterType === 'All' || n.Type === filterType);
-  
-  // Apply visual slice limits to the filtered set if looking at Priority View
   const finalDisplayData = currentTab === 1 ? filteredNotifications.slice(0, priorityLimit) : filteredNotifications;
 
   return (
@@ -88,8 +85,6 @@ export default function App() {
             <InputLabel>Priority Limit (n)</InputLabel>
             <Select value={priorityLimit} label="Priority Limit (n)" onChange={(e) => setPriorityLimit(e.target.value)}>
               <MenuItem value={10}>Top 10</MenuItem>
-              <MenuItem value={15}>Top 15</MenuItem>
-              <MenuItem value={20}>Top 20</MenuItem>
             </Select>
           </FormControl>
         )}
