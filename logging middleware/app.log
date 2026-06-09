@@ -1,0 +1,20 @@
+{"timestamp":"2026-06-09T06:35:27.863Z","level":"info","message":"Backend engine servicing on port 5000"}
+{"timestamp":"2026-06-09T06:38:26.064Z","level":"info","message":"Backend engine servicing on port 5000"}
+{"timestamp":"2026-06-09T06:39:21.534Z","level":"info","message":"Backend engine servicing on port 5000"}
+{"timestamp":"2026-06-09T06:49:08.670Z","level":"info","message":"Backend engine servicing on port 5000"}
+{"timestamp":"2026-06-09T06:49:28.824Z","level":"info","message":"Received request for all raw notifications"}
+{"timestamp":"2026-06-09T06:49:29.176Z","level":"error","message":"Failed fetching data from protected evaluation service route","error":"Request failed with status code 401"}
+{"timestamp":"2026-06-09T06:49:29.184Z","level":"info","message":"Received request for all raw notifications"}
+{"timestamp":"2026-06-09T06:49:29.369Z","level":"error","message":"Failed fetching data from protected evaluation service route","error":"Request failed with status code 401"}
+{"timestamp":"2026-06-09T06:49:39.240Z","level":"info","message":"Received request for all raw notifications"}
+{"timestamp":"2026-06-09T06:49:39.405Z","level":"error","message":"Failed fetching data from protected evaluation service route","error":"Request failed with status code 401"}
+{"timestamp":"2026-06-09T06:49:39.408Z","level":"info","message":"Received request for all raw notifications"}
+{"timestamp":"2026-06-09T06:49:39.458Z","level":"error","message":"Failed fetching data from protected evaluation service route","error":"Request failed with status code 401"}
+{"timestamp":"2026-06-09T07:16:33.325Z","level":"info","message":"Received request for all raw notifications"}
+{"timestamp":"2026-06-09T07:16:33.463Z","level":"error","message":"Failed fetching data from protected evaluation service route","error":"Request failed with status code 401"}
+{"timestamp":"2026-06-09T07:16:33.466Z","level":"info","message":"Received request for all raw notifications"}
+{"timestamp":"2026-06-09T07:16:33.537Z","level":"error","message":"Failed fetching data from protected evaluation service route","error":"Request failed with status code 401"}
+{"timestamp":"2026-06-09T07:16:34.207Z","level":"info","message":"Received request for all raw notifications"}
+{"timestamp":"2026-06-09T07:16:34.280Z","level":"error","message":"Failed fetching data from protected evaluation service route","error":"Request failed with status code 401"}
+{"timestamp":"2026-06-09T07:16:34.283Z","level":"info","message":"Received request for all raw notifications"}
+{"timestamp":"2026-06-09T07:16:34.355Z","level":"error","message":"Failed fetching data from protected evaluation service route","error":"Request failed with status code 401"}
