@@ -8,9 +8,9 @@ const REGISTRATION_PAYLOAD = {
     email: "abhishek.23b0131173@abes.ac.in",
     name: "Abhishek Pathak",
     mobileNo: "7017331435",
-    githubUsername: "2300320130015",
+    githubUsername: "YOUR_ACTUAL_GITHUB_USERNAME_HERE", 
     rollNo: "2300320130015",
-    accessCode: "xgAsNC"
+    accessCode: "cXuqht"
 };
 
 let cachedToken = null;
@@ -25,9 +25,8 @@ async function ensureRegistration() {
     }
 
     try {
-        const response = await axios.post('http://4.224.186.213/evaluation-service/register', REGISTRATION_PAYLOAD);
+        const response = await axios.post('http://4.224.186.213/evaluation-service/ragister', REGISTRATION_PAYLOAD);
         const registeredData = response.data;
-        
         fs.writeFileSync(CREDENTIALS_PATH, JSON.stringify(registeredData, null, 2), 'utf8');
         return registeredData;
     } catch (error) {
@@ -48,7 +47,6 @@ async function getAuthToken() {
             email: credentials.email,
             name: credentials.name,
             rollNo: credentials.rollNo,
-            accessCode: credentials.accessCode,
             clientID: credentials.clientID,
             clientSecret: credentials.clientSecret
         };
@@ -67,18 +65,24 @@ async function remoteLog(stack, level, pkg, message) {
         const token = await getAuthToken();
         if (!token) return;
 
+        // Force exact constraint formatting matching test server expectations
+        const cleanStack = String(stack).toLowerCase().trim();
+        const cleanLevel = String(level).toLowerCase().trim();
+        const cleanPkg = String(pkg).toLowerCase().trim();
+        const cleanMessage = String(message).trim();
+
         await axios.post('http://4.224.186.213/evaluation-service/logs', {
-            stack: stack,
-            level: level,
-            package: pkg,
-            message: message
+            stack: cleanStack,
+            level: cleanLevel,
+            package: cleanPkg,
+            message: cleanMessage
         }, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        process.stdout.write(`[REMOTE LOG SUCCESS] [${level.toUpperCase()}]: ${message}\n`);
+        process.stdout.write(`[REMOTE LOG SUCCESS] [${cleanLevel.toUpperCase()}]: ${cleanMessage}\n`);
     } catch (error) {
-        process.stderr.write(`Remote log shipment failed: ${error.message}\n`);
+        process.stderr.write(`Remote log shipment failed [${level}/${pkg}]: ${error.message}\n`);
     }
 }
 
