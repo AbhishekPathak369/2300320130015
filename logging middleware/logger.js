@@ -8,7 +8,7 @@ const REGISTRATION_PAYLOAD = {
     email: "abhishek.23b0131173@abes.ac.in",
     name: "Abhishek Pathak",
     mobileNo: "7017331435",
-    githubUsername: "YOUR_ACTUAL_GITHUB_USERNAME_HERE", 
+    githubUsername: "github", 
     rollNo: "2300320130015",
     accessCode: "cXuqht"
 };
@@ -27,8 +27,10 @@ async function ensureRegistration() {
     try {
         const response = await axios.post('http://4.224.186.213/evaluation-service/ragister', REGISTRATION_PAYLOAD);
         const registeredData = response.data;
-        fs.writeFileSync(CREDENTIALS_PATH, JSON.stringify(registeredData, null, 2), 'utf8');
-        return registeredData;
+        
+        const dataToSave = { ...registeredData, accessCode: REGISTRATION_PAYLOAD.accessCode };
+        fs.writeFileSync(CREDENTIALS_PATH, JSON.stringify(dataToSave, null, 2), 'utf8');
+        return dataToSave;
     } catch (error) {
         process.stderr.write(`Registration endpoint request failed: ${error.message}\n`);
         return null;
@@ -40,6 +42,7 @@ async function getAuthToken() {
     try {
         const credentials = await ensureRegistration();
         if (!credentials || !credentials.clientID || !credentials.clientSecret) {
+            process.stderr.write('Registration credentials are missing or corrupted.\n');
             return null;
         }
 
@@ -47,6 +50,7 @@ async function getAuthToken() {
             email: credentials.email,
             name: credentials.name,
             rollNo: credentials.rollNo,
+            accessCode: credentials.accessCode || "cXuqht",
             clientID: credentials.clientID,
             clientSecret: credentials.clientSecret
         };
@@ -55,7 +59,7 @@ async function getAuthToken() {
         cachedToken = response.data.access_token;
         return cachedToken;
     } catch (error) {
-        process.stderr.write('Authentication handshake layer failed\n');
+        process.stderr.write(`Authentication handshake layer failed: ${error.response ? JSON.stringify(error.response.data) : error.message}\n`);
         return null;
     }
 }
@@ -65,7 +69,6 @@ async function remoteLog(stack, level, pkg, message) {
         const token = await getAuthToken();
         if (!token) return;
 
-        // Force exact constraint formatting matching test server expectations
         const cleanStack = String(stack).toLowerCase().trim();
         const cleanLevel = String(level).toLowerCase().trim();
         const cleanPkg = String(pkg).toLowerCase().trim();

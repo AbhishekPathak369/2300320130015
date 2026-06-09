@@ -35,7 +35,8 @@ export default function App() {
         const res = await axios.get(`http://localhost:5000/api/all-notifications?limit=50${typeParam}`);
         setNotifications(res.data.data || []);
       } else {
-        const res = await axios.get(`http://localhost:5000/api/priority-notifications?limit=${priorityLimit}`);
+        // Request a full batch to ensure filters don't shrink the list view incorrectly
+        const res = await axios.get(`http://localhost:5000/api/priority-notifications?limit=100`);
         setNotifications(res.data.data || []);
       }
     } catch (err) {
@@ -57,7 +58,11 @@ export default function App() {
     return <EventIcon color="warning" />;
   };
 
+  // Run filtering first
   const filteredNotifications = notifications.filter(n => filterType === 'All' || n.Type === filterType);
+  
+  // Apply visual slice limits to the filtered set if looking at Priority View
+  const finalDisplayData = currentTab === 1 ? filteredNotifications.slice(0, priorityLimit) : filteredNotifications;
 
   return (
     <Container maxWidth="md" style={{ marginTop: '24px', marginBottom: '40px' }}>
@@ -71,7 +76,7 @@ export default function App() {
       </AppBar>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={currentTab} onChange={(e, val) => setCurrentTab(val)} centered variant="fullWidth">
+        <Tabs value={currentTab} onChange={(e, val) => { setCurrentTab(val); setFilterType('All'); }} centered variant="fullWidth">
           <Tab label="All Notifications" />
           <Tab label="Priority Inbox Dashboard" />
         </Tabs>
@@ -106,12 +111,12 @@ export default function App() {
         <Box display="flex" justifyContent="center" my={5}><CircularProgress /></Box>
       ) : (
         <Box display="flex" flexDirection="column" gap={2}>
-          {filteredNotifications.length === 0 ? (
+          {finalDisplayData.length === 0 ? (
             <Typography variant="body1" align="center" color="textSecondary" my={4}>
               No notifications match your current selection filter.
             </Typography>
           ) : (
-            filteredNotifications.map((item) => {
+            finalDisplayData.map((item) => {
               const isRead = readIds.includes(item.ID);
               return (
                 <Card 

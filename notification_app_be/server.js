@@ -28,8 +28,17 @@ const TYPE_WEIGHTS = {
 
 function calculateScore(type, timestampStr) {
     const weight = TYPE_WEIGHTS[type] || 0;
-    const safeTimestamp = timestampStr ? timestampStr.replace(' ', 'T') : new Date().toISOString();
-    const recency = new Date(safeTimestamp).getTime();
+    
+    // Robust date parsing sanity fallback check
+    let recency = Date.now();
+    if (timestampStr) {
+        const safeTimestamp = timestampStr.replace(' ', 'T');
+        const parsedTime = new Date(safeTimestamp).getTime();
+        if (!isNaN(parsedTime)) {
+            recency = parsedTime;
+        }
+    }
+    
     return (weight * 10000000000000) + recency;
 }
 
@@ -58,7 +67,7 @@ app.get('/api/all-notifications', async (req, res) => {
         logger.info('service', `Successfully fetched raw notifications count: ${rawNotifications.length}`);
         res.status(200).json({ success: true, data: rawNotifications });
     } catch (error) {
-        logger.error('handler', `Failed fetching raw data: ${error.message}`);
+        logger.error('handler', 'failed fetching raw data stream from remote server');
         res.status(500).json({ success: false, error: 'Internal gateway error.' });
     }
 });
@@ -66,7 +75,8 @@ app.get('/api/all-notifications', async (req, res) => {
 app.get('/api/priority-notifications', async (req, res) => {
     logger.info('route', 'Received request for prioritized notification stream');
     try {
-        const limit = parseInt(req.query.limit) || 10;
+        // Fetch a high count from the source to avoid losing items during UI filtering loops
+        const limit = parseInt(req.query.limit) || 50; 
         const headers = await getAuthHeader();
         const response = await axios.get(EXTERNAL_API, { headers });
         const rawNotifications = response.data.notifications || [];
@@ -76,7 +86,7 @@ app.get('/api/priority-notifications', async (req, res) => {
         logger.info('service', `Successfully parsed priority records count: ${priorityData.length}`);
         res.status(200).json({ success: true, data: priorityData });
     } catch (error) {
-        logger.error('handler', `Failed fetching priority stream data: ${error.message}`);
+        logger.error('handler', 'failed fetching priority stream metrics data');
         res.status(500).json({ success: false, error: 'Internal gateway error context.' });
     }
 });
